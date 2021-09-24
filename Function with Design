@@ -1,4 +1,48 @@
- public void WEAVING_Recievable_Status()
+ public void JRNENTRY_STATUS()
+        {
+            try
+            {
+                Refresh_Controls();
+                EmailModule = "Missing CM Voided JRN Entry";
+                Get_Email_List("Test", "CML");
+            
+                dt = new DataTable();
+                help.DatabaseName = "CML";
+                Query = @" SELECT JRNENTRY, ORCTRNUM, SOURCDOC FROM GL20000 WHERE ORCTRNUM IN ('0.00000') AND SOURCDOC = 'CMXFR'GROUP BY JRNENTRY, ORCTRNUM, SOURCDOC  ";
+                dt = help.Return_DataTable_Query(Query);
+                if (dt.Rows.Count > 0)
+                {
+                    EmailMsg = "<style> th,td {text-align:center;}tr:nth-child(even) {background-color: #f2f2f2;}</style>";
+
+                    EmailSubject = "JRN ENTRY";
+                    EmailMsg += "<table style='width:40%;' cellspacing='1' cellpadding='1' border='1'>";
+                    EmailMsg += "<tr><td colspan='3' style='background-color:#0b72ba; color:white;text-align:center;'><b>" + EmailSubject + "</td></tr>";
+                    EmailMsg += "<tr><th>JRNENTRY</th><th>ORCTRNUM</th><th>SOURCDOC</th></tr>";
+                    for (int i = 0; i <= dt.Rows.Count - 1; i++)
+                    {
+                        EmailMsg += "<tr>";
+                        EmailMsg += "<td>" + Convert.ToDecimal(dt.Rows[i]["JRNENTRY"]).ToString("n0").Trim() + "</td>";
+                      
+                        EmailMsg += "<td>" + Convert.ToDecimal(dt.Rows[i]["ORCTRNUM"]).ToString("n2").Trim() + "</td>";
+                   
+                        EmailMsg += "<td>" + (dt.Rows[i]["SOURCDOC"]) + "</td>";
+                        EmailMsg += "</tr>";
+                    }
+                    EmailMsg += "</table>";
+                    Generate_EmailFooter_HLR(40);
+                    EmailMsg += EmailFooter;
+                    // SendEmail_(EmailMsg);
+                    //=====Update IsMailed==========
+                }     
+            }
+            catch (Exception ex)
+            {
+                App_Log("Haulrite Mailer Service (Haulrite Truck Trip Monthly Summary Email Error) :" + EmailModule + ex.Message);
+                help.DatabaseName = "DYNAMICS";
+                help.ExecuteParameterizedProcedure("UD_Error_ForMail", "@DocNo,@Company,@Module,@Error", "", "HLR", EmailModule, ex.Message);
+            }
+        }
+        public void WEAVING_Recievable_Status()
         {
             try
             {
